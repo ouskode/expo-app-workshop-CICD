@@ -39,6 +39,8 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/eslint-parser": "^7.28.4",
     "@types/react": "~19.1.0",
     "eslint": "^8.57.1",
     "eslint-config-airbnb": "^19.0.4",
