@@ -19,7 +19,7 @@ jobs:
       - name: ⬇️ Checkout du code
         uses: actions/checkout@v4
 
-      - name: 셋업 Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18' # Utilisez la version de Node.js de votre projet
@@ -60,7 +60,7 @@ jobs:
         with:
           fetch-depth: 0 # Nécessaire pour une analyse correcte des branches
 
-      - name:  SonarCloud Scan
+      - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -82,13 +82,13 @@ jobs:
       - name: ⬇️ Checkout du code
         uses: actions/checkout@v4
 
-      - name: 셋업 Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
 
-      - name: 셋업 Set up Expo and EAS
+      - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
@@ -105,3 +105,86 @@ jobs:
         # Cette étape est un exemple. 'eas submit' est la commande habituelle.
         # Vous pouvez la configurer pour pointer vers le build le plus récent.
         run: echo "Déploiement avec EAS Submit..." # Remplacer par 'eas submit --platform android --latest'
+
+  build_for_e2e:
+    name: Build App for E2E Tests
+    runs-on: ubuntu-latest
+    needs: [lint_and_unit_test, sonarqube_analysis, docker_test]
+    outputs:
+      apk_path: ${{ steps.build_android.outputs.apk_path }} # Permet de passer le chemin de l'APK au job suivant
+    steps:
+      - name: ⬇️ Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Installation des dépendances
+        run: npm ci
+
+      - name: 🏗️ Build Android APK for E2E
+        id: build_android # Ajout d'un ID pour récupérer les outputs
+        run: |
+          eas build --platform android --profile development --non-interactive --no-wait
+          # Récupérer le chemin de l'APK une fois le build terminé
+          # Ceci est une simplification. Dans un vrai scénario, vous devriez télécharger l'artefact.
+          # Par exemple, en utilisant 'eas build:list --status finished --limit 1'
+          # Pour l'exemple, nous allons simuler un chemin pour montrer le principe.
+          echo "Simulating APK download for E2E"
+          # Pour un vrai scénario, utilisez 'eas build:download'
+          echo "apk_path=./your-app.apk" >> $GITHUB_OUTPUT
+
+  e2e_tests:
+    name: End-to-End Tests (Maestro)
+    runs-on: ubuntu-latest
+    needs: [build_for_e2e] # Dépend de la construction de l'APK
+    steps:
+      - name: ⬇️ Checkout du code
+        uses: actions/checkout@v4
+
+      # Installer Maestro CLI
+      - name: ⬇️ Install Maestro CLI
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+
+      # Configurer Java (nécessaire pour Android et Maestro)
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Configurer Android SDK (nécessaire pour les émulateurs)
+      - name: 🤖 Setup Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30 # Ou la version d'API souhaitée
+          target: default
+          arch: x86_64
+          # skin: pixel_4 # Optionnel
+          # disable-animations: true # Rend les tests plus rapides
+
+      - name: ⬇️ Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-app-for-e2e # Nom de l'artefact uploadé par le job de build (si vous l'aviez uploadé)
+          path: . # Télécharge l'APK dans le répertoire courant
+
+      - name: 🚀 Lancer les tests Maestro
+        # Remplacez 'path/to/your-app.apk' par le chemin réel de l'APK téléchargé.
+        # Vous devrez adapter cette partie pour récupérer l'APK de manière fiable.
+        # Par exemple, si vous l'avez uploadé en tant qu'artefact dans le job précédent.
+        run: |
+          # Cet exemple suppose que l'APK a été téléchargé et se trouve à la racine.
+          # Adaptez 'your-app.apk' au nom réel du fichier APK.
+          export MAESTRO_APP_FILE=./your-app.apk
+          ~/.maestro/bin/maestro test maestro/ # Lance tous les tests dans le dossier maestro/
