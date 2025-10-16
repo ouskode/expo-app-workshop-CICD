@@ -1,5 +1,7 @@
 import React from 'react';
-import { StyleSheet, ScrollView, ImageBackground, View } from 'react-native';
+import {
+  StyleSheet, ScrollView, ImageBackground, View,
+} from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { useFonts, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import { ThemedView } from '@/components/themed-view';
@@ -14,14 +16,14 @@ const hpTheme = {
   },
   fonts: {
     main: 'Cinzel_700Bold',
-  }
+  },
 };
 
 // Définition des types de sorciers et de leurs descriptions
 const wizardTypes = {
   scholar: {
     title: 'Érudit de Poudlard',
-    description: "Votre soif de connaissance est insatiable. Sortilèges, histoire de la magie, créatures... rien ne vous échappe. Vous croyez que le savoir est la plus grande des magies.",
+    description: 'Votre soif de connaissance est insatiable. Sortilèges, histoire de la magie, créatures... rien ne vous échappe. Vous croyez que le savoir est la plus grande des magies.',
   },
   auror: {
     title: 'Auror Intrépide',
@@ -34,11 +36,11 @@ const wizardTypes = {
   potions: {
     title: 'Maître des Potions',
     description: "Précision, patience et subtilité sont vos maîtres mots. Vous comprenez la magie qui se cache dans les ingrédients et savez que le pouvoir d'une potion bien préparée peut surpasser celui de nombreux sortilèges.",
-  }
+  },
 };
 
 export default function ExploreScreen() {
-  let [fontsLoaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     Cinzel_700Bold,
   });
 
@@ -52,7 +54,7 @@ export default function ExploreScreen() {
     <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedText style={styles.pageTitle}>Les Archétypes de Sorciers</ThemedText>
-        
+
         {Object.values(wizardTypes).map((wizard, index) => (
           <ThemedView key={index} style={styles.wizardCard}>
             <ThemedText style={styles.wizardTitle}>{wizard.title}</ThemedText>
@@ -99,8 +101,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: hpTheme.colors.text,
     textAlign: 'justify',
-    fontFamily: 'System', 
+    fontFamily: 'System',
     lineHeight: 22,
   },
 });
-

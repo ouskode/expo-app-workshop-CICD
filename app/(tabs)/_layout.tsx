@@ -27,7 +27,8 @@ export default function TabLayout() {
           borderTopColor: hpTheme.colors.accent,
         },
         headerShown: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
