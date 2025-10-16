@@ -9,24 +9,36 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+  const hpTheme = {
+    colors: {
+      text: '#3A2D1C',
+      accent: '#946B2D',
+      background: '#FDF8E7',
+    },
+  };
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: hpTheme.colors.accent,
+        tabBarInactiveTintColor: hpTheme.colors.text,
+        tabBarStyle: {
+          backgroundColor: hpTheme.colors.background,
+          borderTopColor: hpTheme.colors.accent,
+        },
         headerShown: false,
-        tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'QCM',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
+          title: 'Types de Sorciers',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />

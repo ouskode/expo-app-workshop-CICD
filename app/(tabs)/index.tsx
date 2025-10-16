@@ -1,7 +1,25 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView, ImageBackground, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useFonts, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
+
+// Thème Harry Potter - Version Parchemin
+const hpTheme = {
+  colors: {
+    background: '#FDF8E7', // Teinte de parchemin clair
+    parchment: 'rgba(0, 0, 0, 0.05)', // Ombre légère pour les conteneurs
+    parchmentSolid: '#3A2D1C', // Texte principal (brun foncé)
+    text: '#3A2D1C', // Texte principal (brun foncé)
+    accent: '#946B2D', // Or un peu plus sombre pour le contraste
+    primary: '#7F0909', // Rouge Gryffondor
+    disabled: '#9E9E9E', // Gris pour désactivé
+    buttonText: '#FDF8E7', // Texte clair pour les boutons foncés
+  },
+  fonts: {
+    main: 'Cinzel_700Bold',
+  }
+};
 
 // Définition des types de sorciers et de leurs descriptions
 const wizardTypes = {
@@ -58,6 +76,10 @@ const quizData: readonly QuizQuestion[] = [
 ];
 
 export default function QuizScreen() {
+  let [fontsLoaded] = useFonts({
+    Cinzel_700Bold,
+  });
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [correctScore, setCorrectScore] = useState(0);
   const [wizardTypeScores, setWizardTypeScores] = useState<Record<WizardTypeKey, number>>({ scholar: 0, auror: 0, magizoologist: 0, potions: 0 });
@@ -72,12 +94,10 @@ export default function QuizScreen() {
   const handleNextQuestion = () => {
     if (selectedAnswer === null) return;
 
-    // Mise à jour du score de bonnes réponses
     if (selectedAnswer === quizData[currentQuestionIndex].correctAnswerIndex) {
       setCorrectScore(prev => prev + 1);
     }
 
-    // Mise à jour des points pour le type de sorcier
     const answerType = quizData[currentQuestionIndex].answerTypes[selectedAnswer];
     setWizardTypeScores(prev => ({ ...prev, [answerType]: prev[answerType] + 1 }));
 
@@ -92,7 +112,6 @@ export default function QuizScreen() {
   };
 
   const calculateResult = () => {
-    // On trouve le type avec le score le plus élevé
     const topType = (Object.keys(wizardTypeScores) as WizardTypeKey[]).reduce((a, b) => 
       wizardTypeScores[a] > wizardTypeScores[b] ? a : b
     );
@@ -107,30 +126,38 @@ export default function QuizScreen() {
     setIsQuizFinished(false);
   };
 
+  if (!fontsLoaded) {
+    return null; // Affichez un écran de chargement si vous le souhaitez
+  }
+  
+  const backgroundImage = { uri: 'https://www.toptal.com/designers/subtlepatterns/uploads/light-paper-fibers.png' };
+
   if (isQuizFinished) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.resultsTitle}>Vous êtes un...</ThemedText>
-        <ThemedText type="subtitle" style={styles.wizardTypeTitle}>{finalResult.title}</ThemedText>
-        <ThemedText style={styles.wizardDescription}>{finalResult.description}</ThemedText>
-        <ThemedText style={styles.finalScore}>Score de connaissance : {correctScore} / {quizData.length}</ThemedText>
-        <TouchableOpacity style={styles.restartButton} onPress={handleRestart}>
-          <ThemedText style={styles.buttonText}>Recommencer</ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
+      <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
+        <View style={styles.resultsContentContainer}>
+          <ThemedText type="title" style={styles.resultsTitle}>Vous êtes un...</ThemedText>
+          <ThemedText style={styles.wizardTypeTitle}>{finalResult.title}</ThemedText>
+          <ThemedText style={styles.wizardDescription}>{finalResult.description}</ThemedText>
+          <ThemedText style={styles.finalScore}>Score de connaissance : {correctScore} / {quizData.length}</ThemedText>
+          <TouchableOpacity style={styles.restartButton} onPress={handleRestart}>
+            <ThemedText style={styles.buttonText}>Recommencer</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
     );
   }
   
   const currentQuestion = quizData[currentQuestionIndex];
 
   return (
-    <ThemedView style={styles.container}>
+    <ImageBackground source={backgroundImage} style={styles.container} resizeMode="cover">
         <ScrollView contentContainerStyle={styles.scrollContainer}>
             <ThemedView style={styles.header}>
-                <ThemedText type="subtitle">Question {currentQuestionIndex + 1} / {quizData.length}</ThemedText>
+                <ThemedText style={styles.headerText}>Question {currentQuestionIndex + 1} / {quizData.length}</ThemedText>
             </ThemedView>
             <ThemedView style={styles.questionContainer}>
-                <ThemedText type="title" style={styles.questionText}>{currentQuestion.question}</ThemedText>
+                <ThemedText style={styles.questionText}>{currentQuestion.question}</ThemedText>
             </ThemedView>
             
             {currentQuestion.options.map((option, index) => (
@@ -153,80 +180,123 @@ export default function QuizScreen() {
                 </ThemedText>
             </TouchableOpacity>
         </ScrollView>
-    </ThemedView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
   },
   scrollContainer: {
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    paddingVertical: 50,
+    paddingHorizontal: 20,
   },
-  header: { marginBottom: 20, alignItems: 'center' },
+  resultsContentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 50,
+    paddingHorizontal: 20,
+  },
+  header: { 
+    marginBottom: 20, 
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  headerText: {
+    fontFamily: hpTheme.fonts.main,
+    color: hpTheme.colors.text,
+    fontSize: 18,
+  },
   questionContainer: {
-    padding: 15,
+    padding: 20,
     borderRadius: 10,
     marginBottom: 30,
     width: '100%',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: hpTheme.colors.parchment,
+    borderWidth: 1,
+    borderColor: hpTheme.colors.accent,
   },
-  questionText: { textAlign: 'center', fontSize: 22 },
+  questionText: { 
+    textAlign: 'center', 
+    fontSize: 24, 
+    fontFamily: hpTheme.fonts.main,
+    color: hpTheme.colors.text,
+    lineHeight: 32,
+  },
   optionButton: {
     width: '100%',
     padding: 15,
     marginVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#555',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: hpTheme.colors.text,
+    backgroundColor: 'transparent',
   },
   selectedOption: {
-    borderColor: '#87CEEB',
-    backgroundColor: 'rgba(135, 206, 235, 0.3)',
+    borderColor: hpTheme.colors.accent,
+    backgroundColor: 'rgba(148, 107, 45, 0.2)',
   },
-  optionText: { textAlign: 'center', fontSize: 18 },
+  optionText: { 
+    textAlign: 'center', 
+    fontSize: 18,
+    color: hpTheme.colors.text,
+    fontFamily: hpTheme.fonts.main,
+  },
   nextButton: {
     width: '100%',
     padding: 15,
     marginTop: 20,
-    borderRadius: 10,
-    backgroundColor: '#007AFF',
+    borderRadius: 30,
+    backgroundColor: hpTheme.colors.primary,
     alignItems: 'center',
   },
-  disabledButton: { backgroundColor: '#555' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  // Styles pour les résultats
-  resultsTitle: { marginBottom: 15 },
+  disabledButton: { backgroundColor: hpTheme.colors.disabled },
+  buttonText: { 
+    color: hpTheme.colors.buttonText,
+    fontSize: 18, 
+    fontFamily: hpTheme.fonts.main,
+  },
+  resultsTitle: { 
+    marginBottom: 15, 
+    fontFamily: hpTheme.fonts.main,
+    color: hpTheme.colors.text,
+  },
   wizardTypeTitle: {
-    fontSize: 28,
-    color: '#87CEEB',
+    fontSize: 32,
+    color: hpTheme.colors.accent,
     marginBottom: 20,
+    fontFamily: hpTheme.fonts.main,
+    textAlign: 'center',
+    lineHeight: 40,
   },
   wizardDescription: {
     fontSize: 18,
     textAlign: 'center',
     marginBottom: 30,
     paddingHorizontal: 10,
+    color: hpTheme.colors.text,
+    fontFamily: 'System', 
+    lineHeight: 24,
   },
   finalScore: {
     fontSize: 16,
-    color: '#999',
+    color: hpTheme.colors.text,
     marginBottom: 30,
+    fontFamily: hpTheme.fonts.main,
   },
   restartButton: {
     paddingVertical: 15,
     paddingHorizontal: 30,
-    borderRadius: 10,
-    backgroundColor: '#007AFF',
+    borderRadius: 30,
+    backgroundColor: hpTheme.colors.primary,
     alignItems: 'center',
   },
 });
